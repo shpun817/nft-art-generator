@@ -4,6 +4,7 @@ const sharp = require('sharp');
 // Input
 const desiredNumNfts = 1000;
 const outputSize = 256;
+const layersFolderPath = "./layers";
 const traits = [
     { name: "bg", numVariants: 5 },
     { name: "head", numVariants: 1 },
@@ -56,8 +57,8 @@ function idxToFace(idx) {
     return {face, faceString: face.join('-')};
 }
 
-function getLayer(name) {
-    const svg = readFileSync(`./layers/${name}.svg`, 'utf-8');
+function getLayer(traitName, fileName) {
+    const svg = readFileSync(`${layersFolderPath}/${traitName}/${fileName}.svg`, 'utf-8');
     const re = /(?<=\<svg\s*[^>]*>)([\s\S]*?)(?=\<\/svg\>)/g;
     return svg.match(re)[0];
 }
@@ -75,21 +76,15 @@ async function svgToPng(name) {
 function createImage(idx) {
 
     const {face, faceString} = idxToFace(idx);
-    const [bg, head, hair, eyes, nose, mouth, beard] = face;
 
     if (takenFaces.has(faceString)) {
         createImage();
     } else {
         takenFaces.add(faceString);
 
-        const final = template
-            .replace('<!-- bg -->', getLayer(`bg${bg}`))
-            .replace('<!-- head -->', getLayer(`head${head}`))
-            .replace('<!-- hair -->', getLayer(`hair${hair}`))
-            .replace('<!-- eyes -->', getLayer(`eyes${eyes}`))
-            .replace('<!-- nose -->', getLayer(`nose${nose}`))
-            .replace('<!-- mouth -->', getLayer(`mouth${mouth}`))
-            .replace('<!-- beard -->', getLayer(`beard${beard}`))
+        const final = traits.reduce((svg, trait, i) => {
+            return svg.replace(`<!-- ${trait.name} -->`, getLayer(trait.name, trait.name + face[i]));
+        }, template);
 
         const meta = {
             name: `Person ${idx}`,
