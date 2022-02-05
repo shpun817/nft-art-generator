@@ -17,7 +17,6 @@ const template = `
     </svg>
 `;
 const takenFaces = new Set();
-let idx = numNfts;
 
 function randInt(max) {
     return Math.floor(Math.random() * (max + 1));
@@ -90,10 +89,9 @@ if (!existsSync('./out')){
 // Cleanup dir before each run
 readdirSync('./out').forEach(f => rmSync(`./out/${f}`));
 
-do {
-    createImage(idx);
-    idx--;
-} while (idx > 0);
+for (let i = 0; i < numNfts; ++i) {
+    createImage(i);
+}
 
 const numUniqueNfts = takenFaces.size;
 if (numUniqueNfts === numNfts) {
