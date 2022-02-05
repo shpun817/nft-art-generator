@@ -6,15 +6,21 @@ const desiredNumNfts = 1000;
 const outputSize = 256;
 const layersFolderPath = "./layers";
 const traits = [
-    { name: "bg", numVariants: 5 },
-    { name: "head", numVariants: 1 },
-    { name: "hair", numVariants: 7 },
-    { name: "eyes", numVariants: 9 },
-    { name: "nose", numVariants: 4 },
-    { name: "mouth", numVariants: 5 },
-    { name: "beard", numVariants: 3 },
+    { name: "bg" },
+    { name: "head" },
+    { name: "hair" },
+    { name: "eyes" },
+    { name: "nose" },
+    { name: "mouth" },
+    { name: "beard" },
 ];
 // End of Input
+
+traits.forEach((trait) => {
+    const filenames = readdirSync(layersFolderPath + "/" + trait.name);
+    trait.numVariants = filenames.length;
+    trait.filePaths = filenames.map((filename) => `${layersFolderPath}/${trait.name}/${filename}`);
+});
 
 const numNfts = Math.min(
     desiredNumNfts,
@@ -57,8 +63,8 @@ function idxToFace(idx) {
     return {face, faceString: face.join('-')};
 }
 
-function getLayer(traitName, fileName) {
-    const svg = readFileSync(`${layersFolderPath}/${traitName}/${fileName}.svg`, 'utf-8');
+function getLayer(filePath) {
+    const svg = readFileSync(filePath, 'utf-8');
     const re = /(?<=\<svg\s*[^>]*>)([\s\S]*?)(?=\<\/svg\>)/g;
     return svg.match(re)[0];
 }
@@ -83,7 +89,7 @@ function createImage(idx) {
         takenFaces.add(faceString);
 
         const final = traits.reduce((svg, trait, i) => {
-            return svg.replace(`<!-- ${trait.name} -->`, getLayer(trait.name, trait.name + face[i]));
+            return svg.replace(`<!-- ${trait.name} -->`, getLayer(trait.filePaths[face[i]]));
         }, template);
 
         const meta = {
